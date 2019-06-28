@@ -1,0 +1,103 @@
+'---------------
+'HARD + Challenge
+'---------------
+Sub stock_data_hard()
+
+    'Saving in memory
+    Dim summary_table_row As Long
+    Dim stock_name As String
+    Dim total_stock_volume As Double
+    Dim last_close As Double
+    Dim first_open As Double
+
+    Application.ScreenUpdating = False
+
+    '-----------------------------
+    'Looping through worksheets
+    For Each ws In Worksheets
+        ws.Range("I1") = "Ticker"
+        'ws.Range("M1") = "Open"
+        'ws.Range("N1") = "Close"
+        ws.Range("L1") = "Total Stock Volume"
+        ws.Range("J1") = "Yearly Change"
+        ws.Range("K1") = "Percent Change"
+        ws.Range("O2") = "Greatest % Increase"
+        ws.Range("O3") = "Greatest % Decrease"
+        ws.Range("O4") = "Greatest Total Volume"
+        ws.Range("P1") = "Ticker"
+        ws.Range("Q1") = "Value"
+        
+        summary_table_row = 2
+        
+        'Define last row
+        last_row = ws.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        '------------------------------
+        'starting the loop
+            For i = 2 To last_row
+                
+                If ws.Cells(i - 1, 1).Value <> ws.Cells(i, 1).Value Then
+                    first_open = ws.Cells(i, 3).Value
+                End If
+                
+                If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+                    last_close = ws.Cells(i, 6).Value
+                End If
+                
+                If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+                    'Setting the stock name and its total volume
+                    stock_name = ws.Cells(i, 1).Value
+                    total_stock_volume = ws.Cells(i, 7).Value
+                    ws.Range("I" & summary_table_row).Value = stock_name
+                    'ws.Range("M" & summary_table_row).Value = first_open
+                    'ws.Range("N" & summary_table_row).Value = last_close
+                    ws.Range("L" & summary_table_row).Value = total_stock_volume
+                    ws.Range("J" & summary_table_row).Value = last_close - first_open
+                    ws.Range("K" & summary_table_row).Value = Format(Expression:=(last_close - first_open) / first_open, Format:="Percent")
+                    'Add 1 to the summary table
+                    summary_table_row = summary_table_row + 1
+                    'resetting the stock volume back to 0
+                    total_stock_volume = 0
+                Else
+                    'If stock names dont match, then volume at "i" gets added to total volume
+                    total_stock_volume = total_stock_volume + ws.Cells(i, 7).Value
+                    
+                End If
+            
+            Next i
+
+        For n = 2 To last_row
+            If ws.Cells(n, 10).Value < 0 Then
+                ws.Cells(n, 10).Interior.Color = vbRed
+            
+            ElseIf ws.Cells(n, 10).Value > 0 Then
+                ws.Cells(n, 10).Interior.Color = vbGreen
+            End If
+        Next n
+        
+        'Getting the greatest percent increase and decrease, and the greatest total volume
+        greatest_decrease = ws.Application.WorksheetFunction.Min(ws.Range("K:K"))
+        greatest_increase = ws.Application.WorksheetFunction.Max(ws.Range("K:K"))
+        greatest_total_volume = ws.Application.WorksheetFunction.Max(ws.Range("L:L"))
+        
+        ws.Range("Q2").Value = Format(greatest_increase, Format:="Percent")
+        ws.Range("Q3").Value = Format(greatest_decrease, Format:="Percent")
+        ws.Range("Q4").Value = greatest_total_volume
+        
+        For x = 2 To last_row
+            If ws.Cells(x, 11).Value = greatest_increase Then
+                ws.Range("P2").Value = ws.Cells(x, 9).Value
+            ElseIf ws.Cells(x, 11).Value = greatest_decrease Then
+                ws.Range("P3").Value = ws.Cells(x, 9).Value
+            ElseIf ws.Cells(x, 12).Value = greatest_total_volume Then
+                ws.Range("P4").Value = ws.Cells(x, 9).Value
+            End If
+        Next x
+        
+    ws.Range("J1:Q4").Columns.AutoFit
+        
+    Next ws
+
+    Application.ScreenUpdating = True
+
+End Sub
